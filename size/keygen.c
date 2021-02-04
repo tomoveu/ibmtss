@@ -48,6 +48,7 @@ int main(int argc, char *argv[])
     Create_Out outCreate;
     Load_In inLoad;
     Load_Out outLoad;
+    FlushContext_In inFlush;
     /* Default key type is RSA 2048 */
     TPMI_ALG_PUBLIC alg = TPM_ALG_RSA;
     TPMI_ALG_HASH hashAlg = TPM_ALG_SHA256;
@@ -167,7 +168,7 @@ int main(int argc, char *argv[])
             NULL);
     if(rc != 0) {
         printf("Getting Public Template for Signing Key failed\n");
-        goto exit;
+        goto exit_flush_primary;
     }
     /* Optional properties */
     inCreate.outsideInfo.t.size = 0;
@@ -187,7 +188,7 @@ int main(int argc, char *argv[])
                 TPM_RH_NULL, NULL, 0);
     if (rc != 0) {
         printf("TSS_Execute of TPM_CC_Create failed\n");
-        goto exit;
+        goto exit_flush_primary;
     }
     printf("TSS_Execute of TPM_CC_Create is a success\n");
 
@@ -206,9 +207,31 @@ int main(int argc, char *argv[])
                 TPM_RH_NULL, NULL, 0);
     if (rc != 0) {
         printf("TSS_Execute of TPM_CC_Load failed\n");
-        goto exit;
+        goto exit_flush_primary;
     }
     printf("TSS_Execute of TPM_CC_Load is a success\n");
+
+exit_flush_all:
+
+    inFlush.flushHandle = outLoad.objectHandle;
+    rc = TSS_Execute(tssContext, NULL,
+                (COMMAND_PARAMETERS *)&inFlush,
+                NULL, TPM_CC_FlushContext,
+                TPM_RH_NULL, NULL, 0);
+    if (rc != 0) {
+        printf("Signing key flushed from TPM\n");
+    }
+
+exit_flush_primary:
+
+    inFlush.flushHandle = outPrimary.objectHandle;
+    rc = TSS_Execute(tssContext, NULL,
+                (COMMAND_PARAMETERS *)&inFlush,
+                NULL, TPM_CC_FlushContext,
+                TPM_RH_NULL, NULL, 0);
+    if (rc != 0) {
+        printf("Primary key flushed from TPM\n");
+    }
 
 exit:
 
