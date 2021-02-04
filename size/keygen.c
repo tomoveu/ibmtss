@@ -104,7 +104,9 @@ int main(int argc, char *argv[])
     addObjectAttributes.val |= TPMA_OBJECT_USERWITHAUTH;
     deleteObjectAttributes.val = 0;
 
+#ifdef DEBUG
     TSS_SetProperty(NULL, TPM_TRACE_LEVEL, "2");
+#endif
 
     /* Prepare Primary (Storage) Key under Owner Hierarchy */
     keyType = TYPE_ST;
